@@ -4,7 +4,7 @@ import ModelMeasurement as mm
 import Models_ult as mu
 
 class SVMachine(mu.model):
-    def __init__(self, X_train, Y_train, soft_coef=1.0) -> None:
+    def __init__(self, X_train, Y_train, soft_coef=1.0, iteration=100) -> None:
         
         # bias
         self.b = 0.0
@@ -21,24 +21,29 @@ class SVMachine(mu.model):
         # format train data
         self.num = len(X_train)
         self.numFeats = len(X_train[0])
-        self.X = X_train
-        self.Y = Y_train
+        
+        # train iteration
+        self.iteration = iteration
         
         
-    def train(self, iteration=100):
+    def train(self, x_train, y_train):
+
+        self.X = x_train
+        self.Y = y_train
         
-        X = self.X
-        Y = self.Y
+        X = x_train
+        Y = y_train
         num = self.num
         
         # init alpha list
-        self.alpha = np.ones((num,1))
+        self.alpha = np.zeros((num,1))
         # init product matrix
         self.calProductMat()
         # init error list
         self.E = self.calcualteError()
  
-        for iter in range(iteration):
+        for iter in range(self.iteration):
+        # while True:
             
             i, j = self.selectAlpha()
             
@@ -68,15 +73,13 @@ class SVMachine(mu.model):
             alpha_j_unclip = self.alpha[j] + (Y[j]*(self.E[i] - self.E[j])) / eta
             alpha_j = np.clip(alpha_j_unclip,L,H)
             # ai_new = ai_old + y_i*y_j(aj_new - aj_old)
-            alpha_i = self.alpha[i] + Y[i]*Y[j]*(alpha_j - self.alpha[j])
+            alpha_i = self.alpha[i] + Y[i]*Y[j]*(self.alpha[j]-alpha_j)
             
             
             # update bais
-            b_i = -self.E[i] + (self.alpha[i] - alpha_i)*Y[i]*k11 + \
-                (self.alpha[j] - alpha_j)*Y[j]*k12 + self.b
+            b_i = -self.E[i] + (self.alpha[i] - alpha_i)*Y[i]*k11 + (self.alpha[j] - alpha_j)*Y[j]*k12 + self.b
             
-            b_j = -self.E[j] + (self.alpha[i] - alpha_i)*Y[i]*k12 + \
-                (self.alpha[j] - alpha_j)*Y[j]*k22 + self.b
+            b_j = -self.E[j] + (self.alpha[i] - alpha_i)*Y[i]*k12 + (self.alpha[j] - alpha_j)*Y[j]*k22 + self.b
             
             if 0 < alpha_i < self.C:
                 b_new = b_i
@@ -90,7 +93,7 @@ class SVMachine(mu.model):
             self.b = b_new
 
             # udpate all error
-            self.calcualteError()
+            self.E = self.calcualteError()
             
     # kernel for input X
     def kernel(self, x1, x2):
@@ -146,8 +149,8 @@ class SVMachine(mu.model):
         Y = self.Y
         a_i = self.alpha[i]
         
-        y_fx = np.transpose(np.dot(np.transpose(self.alpha*Y), self.productMat[i])) + self.b
-        y_fx = y_fx* Y[i]
+        fx = np.transpose(np.dot(np.transpose(self.alpha*Y), self.productMat[i])) + self.b
+        y_fx = np.int32(fx* Y[i])
         
         # if true, KKT is valied, otherwise KKT is invalid
         # if it is invalid, the alpha is going to update
@@ -166,7 +169,7 @@ class SVMachine(mu.model):
             x_kernel = self.kernel(np.transpose(x), X[i])
             r += self.alpha[i]*Y[i]*x_kernel
             
-        return 1 if r>0 else 0
+        return 1 if r > 0 else -1
         
             
 ############# test part
@@ -178,15 +181,26 @@ x_train = np.float32(train_set[:, 2:])
 x_train = (x_train - np.mean(x_train, axis=0)) / np.var(x_train, axis=0)
 
 # standardlize labels
-y_train = np.expand_dims(Data_loader.quantifyLabel(train_set[:, 1]), 1)
+y_train = np.expand_dims(Data_loader.quantifyLabel_SVM(train_set[:, 1]), 1)
 
+## init parameters
+softMargin_coeff = 1.0
+train_times = 200
 ## init model
-svm = SVMachine(x_train, y_train, 1.0)
+svm = SVMachine(x_train, y_train, softMargin_coeff, train_times)
+# ## train model
+# svm.train(x_train, y_train)
 
 ############ Evaluation
+# normalize test data
+x_test = np.float32(test_set[:, 2:])
+x_test = (x_test - np.mean(x_test, axis=0)) / np.var(x_test, axis=0)
+# standardlize labels
+y_test = np.expand_dims(Data_loader.quantifyLabel_SVM(test_set[:, 1]), 1)
+
 ## Model measurement
 measure = mm.ModelMeasure()
-iteration = 100
-mAP = measure.calMAP(svm, 100, x_train, y_train)
+evaluate_times = 50
+mAP = measure.calMAP(svm, evaluate_times,  x_train, y_train, x_test, y_test)
 
 
