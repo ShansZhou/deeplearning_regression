@@ -37,9 +37,7 @@ class SVMachine(mu.model):
         self.calProductMat()
         # init error list
         self.E = self.calcualteError()
-        
-        
-                
+ 
         for iter in range(iteration):
             
             i, j = self.selectAlpha()
@@ -67,7 +65,7 @@ class SVMachine(mu.model):
             
             # update alpha
             # aj_new = aj_old + y_j*(E_i - E_j)/eta
-            alpha_j_unclip = self.alpha[j] + (Y[j]*(self.E[i] - self.E[j]) ) / eta
+            alpha_j_unclip = self.alpha[j] + (Y[j]*(self.E[i] - self.E[j])) / eta
             alpha_j = np.clip(alpha_j_unclip,L,H)
             # ai_new = ai_old + y_i*y_j(aj_new - aj_old)
             alpha_i = self.alpha[i] + Y[i]*Y[j]*(alpha_j - self.alpha[j])
@@ -94,9 +92,6 @@ class SVMachine(mu.model):
             # udpate all error
             self.calcualteError()
             
-    def quantifyLabel(self, y_labels):
-        return np.where(y_labels=="M", 1 ,0)
-    
     # kernel for input X
     def kernel(self, x1, x2):
         return np.dot(x1,x2)
@@ -107,8 +102,7 @@ class SVMachine(mu.model):
         for i in range(self.num):
             for j in range(self.num):
                 self.productMat[i][j] = self.productMat[j][i] = self.kernel(self.X[i],self.X[j])
-          
-            
+               
     # calculate error list
     # E_i = SIGMA(alpha_i*Y_i*K_ij)
     def calcualteError(self):
