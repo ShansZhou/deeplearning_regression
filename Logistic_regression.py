@@ -23,7 +23,6 @@ class logisticRegression():
         
         for epo in range(epoch):
             numOfdataset = len(x_train)
-            np.random.shuffle(x_train) # improve recall and mAP
             cost = 0.0
             for i in range(numOfdataset//batchsize):
                 # process a batch
