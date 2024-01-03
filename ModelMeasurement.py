@@ -13,12 +13,12 @@ class ModelMeasure():
         
     # the ratio of predicts completely
     def recall(self):
-        if self.TP+self.FN == 0: return 0
+        if self.TP+self.FN == 0.0: return 0.0
         return self.TP/(self.TP+self.FN)
     
     # the precision of positive predictions
     def precision(self):
-        if self.TP+self.FP == 0: return 0
+        if self.TP+self.FP == 0.0: return 0.0
         
         return self.TP/(self.TP+self.FP)
     
@@ -52,6 +52,9 @@ class ModelMeasure():
     def calMAP(self, model, iter, x_train, y_train, x_test, y_test):
         iteration = iter
         evaluation_list = []
+        
+        
+        
         for i in range(iteration):
             print("------------------------------------it[%d]----------------------------------------" % (i))
             correct_acc = 0
@@ -60,14 +63,28 @@ class ModelMeasure():
             FP = 0
             FN = 0
             
+            feats_count = len(x_test[0])
+            data_num = len(x_test)
+            
+            # shuffle dataset
+            trainSet = np.column_stack((x_train, y_train))
+            np.random.shuffle(trainSet)
+            x_train = trainSet[:,:feats_count]
+            y_train = np.reshape(trainSet[:,feats_count], (len(y_train),1))
+            
+            testSet = np.column_stack((x_test, y_test))
+            np.random.shuffle(testSet)
+            x_test  =  testSet[:,:feats_count]
+            y_test  =  np.reshape(testSet[:,feats_count], (len(y_test),1))
+            
+            
             model.train(x_train, y_train)
             
-            data_num = len(x_test)
             for i in range(data_num):
-                feats_count = len(x_test[i])
+                
                 x = np.reshape(x_test[i],(feats_count,1))
                 predict_var = model.predict(x)
-                gt = y_test[i]
+                gt = np.int(y_test[i])
                 
                 # prediction is Truth
                 if gt == predict_var:
@@ -79,7 +96,7 @@ class ModelMeasure():
                     if predict_var==1: FP+=1
                     else: FN+=1
                     
-                # print("GT is %s, Prediction is %s" % (gt, predict_var))
+                # print("GT: %s, PD: %s" % (gt, predict_var))
 
             # print("Accuracy: %.3f, M:%d, B:%d, correct: %d" % (correct_acc/len(test_set), m_acc, b_acc, correct_acc))
             recall, precision, accuracy = self.evaluate(TP, TN, FP, FN)
@@ -93,14 +110,18 @@ class ModelMeasure():
         evaluation_list_sorted = sorted(evaluation_list, key=lambda x:x[0])
         AP = 0.0
         prev_recall = evaluation_list_sorted[0][0]
+        counter =0
         for evaluation in evaluation_list_sorted:
             
             recallOffset = abs(evaluation[0] - prev_recall)
+            if recallOffset < 1e-10: continue
+            
             AP += recallOffset*evaluation[1]
             prev_recall = evaluation[0]
+            counter+=1
             
-        mAP = AP / iteration *100
+        mAP = AP / counter
         
-        print(">>> mAP: %.2f" % (mAP))
+        print(">>> mAP: %.4f" % (mAP))
         
         return mAP

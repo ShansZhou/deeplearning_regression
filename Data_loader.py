@@ -19,6 +19,10 @@ def load_CSVdata(dataPath):
 def quantifyLabel( y_labels):
         return np.where(y_labels=="M", 1 ,0)
 
+# define positive +1 and negative -1
+def quantifyLabel_SVM( y_labels):
+        return np.where(y_labels=="M", 1 ,-1)
+
 def mapToLabel(y_predict):
     if y_predict > 0.5:
         return 'M'
