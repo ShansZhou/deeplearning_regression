@@ -1,5 +1,6 @@
 import csv
-import random
+import numpy as np
+
 
 def load_CSVdata(dataPath):
     with open(dataPath, 'r') as file:
@@ -10,10 +11,16 @@ def load_CSVdata(dataPath):
     
     n = len(data) //3
 
-    test_set = data[1:n]
-    train_set = data[n:]
-
-    random.shuffle(train_set)
+    test_set = np.array(data[1:n]) 
+    train_set = np.array(data[n:])
 
     return test_set, train_set
 
+def quantifyLabel( y_labels):
+        return np.where(y_labels=="M", 1 ,0)
+
+def mapToLabel(y_predict):
+    if y_predict > 0.5:
+        return 'M'
+    else:
+        return 'B'
