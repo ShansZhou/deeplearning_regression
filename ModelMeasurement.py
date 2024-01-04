@@ -119,8 +119,11 @@ class ModelMeasure():
             AP += recallOffset*evaluation[1]
             prev_recall = evaluation[0]
             counter+=1
-            
-        mAP = AP / counter
+        
+        if counter ==0: # only one valid value
+            mAP = evaluation_list_sorted[0][0]*evaluation_list_sorted[0][1]
+        else:
+            mAP = AP / counter
         
         print(">>> mAP: %.4f" % (mAP))
         
