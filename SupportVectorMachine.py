@@ -94,6 +94,7 @@ class SVMachine(mu.model):
 
             # udpate all error
             self.E = self.calcualteError()
+            # print("cost: %.3f"%(np.sqrt(np.sum(self.E)**2)))
             
     # kernel for input X
     def kernel(self, x1, x2):
@@ -185,7 +186,7 @@ y_train = np.expand_dims(Data_loader.quantifyLabel_SVM(train_set[:, 1]), 1)
 
 ## init parameters
 softMargin_coeff = 1.0
-train_times = 200
+train_times = 100
 ## init model
 svm = SVMachine(x_train, y_train, softMargin_coeff, train_times)
 # ## train model
