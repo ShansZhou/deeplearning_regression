@@ -3,7 +3,7 @@ import Models_ult as mu
 import Data_loader
 import ModelMeasurement as mm
 
-
+# ID3 tree
 class DecisionTree(mu.model):
     def __init__(self) -> None:
         self.numFeats = 0
@@ -54,7 +54,9 @@ class DecisionTree(mu.model):
             # if(self.checkFeats[i]==1): continue
             
             feats_data = curr_x[:,i]
-            # classify data into two class WRT mean
+            # classify data into two class WRT only one attributive: mean
+            # TODO: implementing CART tree or C4.5 tree
+            
             mean = np.mean(feats_data)
             cls0_idx = [feats_data <  mean] # store idx
             cls1_idx = [feats_data >= mean]
